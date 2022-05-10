@@ -1,0 +1,43 @@
+НА СВОЙ СТРАХ И РИСК:
+Автоматизируем выполнение депозита в Iron Fish Bank - ironfish deposit
+
+1. Вносим изменения в файл:
+nano /root/ironfish/ironfish-cli/build/src/commands/deposit.js
+Находим строку и комментируем ее (т.е. ставим // перед ней): (65 строка)
+Было:
+const confirm = await core_1.CliUx.ux.confirm('Do you confirm (Y/N)?');
+Стало:
+// const confirm = await core_1.CliUx.ux.confirm('Do you confirm (Y/N)?');
+И сразу после нее вводим следующую строку:
+const confirm = true;
+С соблюдением отступов.
+CTRL+O
+Enter
+CTRL+X
+
+2. Создаем скрипт для автоматического выполнения операции депозита:
+touch /root/autodeposit.sh
+chmod +x /root/autodeposit.sh
+nano /root/autodeposit.sh
+И туда добавляем:
+#!/bin/bash
+yarn --cwd ~/ironfish/ironfish-cli/ start:once deposit
+
+CTRL+O
+Enter
+CTRL+X
+
+3. Создаем файл для логов:
+touch /root/logfile.log
+
+4. Создаем задачу для автоматического выполнения операции депозита в cron:
+nano /etc/crontab
+И вводим внизу строку (Выполнение раз в минуту, кто хочет поменять - смотрите сайт crontab guru):
+* * * * * root /root/autodeposit.sh | tee -a /root/logfile.log
+
+5. Запускаем cron + ставим авто-запуск крона при запуске сервера:
+systemctl enable cron
+systemctl start cron
+
+И смотрим результат:
+tail -F /root/logfile.log
